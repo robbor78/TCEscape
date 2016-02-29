@@ -18,7 +18,6 @@ namespace TCEscape
     {
       List<Area> areas = BuildAreas(harmful, deadly);
 
-
       bool[][] visited = new bool[dim][];
       for (int i = 0; i < dim; i++)
       {
@@ -53,22 +52,14 @@ namespace TCEscape
           {
             visited[x][y] = true;
 
-
             Enqueue(queue, areas, nowLives, x - 1, y);
             Enqueue(queue, areas, nowLives, x + 1, y);
             Enqueue(queue, areas, nowLives, x, y - 1);
             Enqueue(queue, areas, nowLives, x, y + 1);
 
-
-
           }
         }
-
-
       }
-
-
-
       return lives == int.MaxValue ? -1 : lives;
     }
 
