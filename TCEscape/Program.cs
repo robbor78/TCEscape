@@ -16,7 +16,7 @@ namespace TCEscape
 
     public int lowest(String[] harmful, String[] deadly)
     {
-      List<Area> area = BuildAreas(harmful, deadly);
+      List<Area> areas = BuildAreas(harmful, deadly);
 
 
       bool[][] visited = new bool[dim][];
@@ -33,12 +33,34 @@ namespace TCEscape
       while (queue.Count() > 0)
       {
         Tuple<int, int, int> now = queue.Dequeue();
+        int x = now.Item1;
+        int y = now.Item2;
+        int nowLives = now.Item3;
 
         if (IsDestination(now))
         {
-          if (now.Item3 < lives)
+          UpdateLives(ref lives, nowLives);
+        }
+        else
+        {
+
+          //already visited ?
+          if (visited[x][y])
           {
-            lives = now.Item3;
+            UpdateLives(ref lives, nowLives);
+          }
+          else
+          {
+            visited[x][y] = true;
+
+
+            Enqueue(queue, areas, nowLives, x - 1, y);
+            Enqueue(queue, areas, nowLives, x + 1, y);
+            Enqueue(queue, areas, nowLives, x, y - 1);
+            Enqueue(queue, areas, nowLives, x, y + 1);
+
+
+
           }
         }
 
@@ -47,7 +69,51 @@ namespace TCEscape
 
 
 
-      return lives == int.MaxValue ? -1 : lives; ;
+      return lives == int.MaxValue ? -1 : lives;
+    }
+
+    private void Enqueue(Queue<Tuple<int, int, int>> queue, List<Area> areas, int nowLives, int nx, int ny)
+    {
+      if (nx >= 0 && ny < dim)
+      {
+        if (isAllowed(areas, nx, ny))
+        {
+          int newLives = nowLives + GetDamage(areas, nx, ny);
+          queue.Enqueue(new Tuple<int, int, int>(nx, ny, newLives));
+        }
+      }
+    }
+
+    private bool isAllowed(List<Area> areas, int x, int y)
+    {
+      foreach (Area area in areas)
+      {
+        if (area.areaType == AreaType.DEADLY && area.isContains(x, y))
+        {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    private int GetDamage(List<Area> areas, int x, int y)
+    {
+      foreach (Area area in areas)
+      {
+        if (area.areaType == AreaType.HARMFUL && area.isContains(x, y))
+        {
+          return 1;
+        }
+      }
+      return 0;
+    }
+
+    private void UpdateLives(ref int lives, int nowLives)
+    {
+      if (nowLives < lives)
+      {
+        lives = nowLives;
+      }
     }
 
     private bool IsDestination(Tuple<int, int, int> pos)
