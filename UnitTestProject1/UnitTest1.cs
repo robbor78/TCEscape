@@ -24,7 +24,7 @@ namespace UnitTestProject1
       int[] allLives = new int[] { 1, 1000 };
 
       int length = allHarmful.Length;
-      for (int i = 0; i < length; i++)
+      for (int i = 1; i < length; i++)
       {
         string[] harmful = allHarmful[i];
         string[] deadly = allDeadly[i];

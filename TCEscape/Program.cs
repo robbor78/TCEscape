@@ -13,10 +13,18 @@ namespace TCEscape
     }
 
     private readonly int dim = 500;
+    private int[][] visited;
+    HashSet<Node> nodes;
 
     public int lowest(String[] harmful, String[] deadly)
     {
       List<Area> areas = BuildAreas(harmful, deadly);
+
+      visited = new int[dim][];
+      for (int i = 0; i < dim; i++)
+      {
+        visited[i] = Enumerable.Repeat(-1, dim).ToArray();
+      }
 
       //bool[][] visited = new bool[dim][];
       //for (int i = 0; i < dim; i++)
@@ -28,11 +36,12 @@ namespace TCEscape
       //Queue<Tuple<int, int, int>> queue = new Queue<Tuple<int, int, int>>(); //x,y,step-count
       //queue.Enqueue(new Tuple<int, int, int>(0, 0, 0));
 
-      MinPQ<Node> queue = new MinPQ<Node>();
+      MinPQ<Node> queue = new MinPQ<Node>(new NodeComparer());
       queue.insert(new Node() { distance = dim * 2, lives = 0, x = 0, y = 0 });
+      nodes = new HashSet<Node>();
 
       //visited[0][0] = true;
-
+      visited[0][0] = 0;
       while (queue.size() > 0)
       {
         //Tuple<int, int, int> now = queue.Dequeue();
@@ -66,20 +75,25 @@ namespace TCEscape
           //}
         }
       }
-      return lives == int.MaxValue ? -1 : lives;
+      return lives == int.MaxValue ? -1 : lives + 1;
     }
 
     //private void Enqueue(Queue<Tuple<int, int, int>> queue, List<Area> areas, int nowLives, int nx, int ny)
     private void Enqueue(MinPQ<Node> queue, List<Area> areas, int nowLives, int nx, int ny)
     {
-      if (nx >= 0 && ny < dim)
+      if (nx >= 0 && nx < dim && ny >= 0 && ny < dim)
       {
         if (isAllowed(areas, nx, ny))
         {
           int newLives = nowLives + GetDamage(areas, nx, ny);
-          int distance = dim-nx + dim-ny;
-          //queue.Enqueue(new Tuple<int, int, int>(nx, ny, newLives));
-          queue.insert(new Node() { x = nx, y = ny, lives = newLives, distance = distance });
+          int current = visited[nx][ny];
+          if (current == -1 || current > newLives)
+          {
+            visited[nx][ny] = newLives;
+            int distance = dim - nx + dim - ny;
+            //queue.Enqueue(new Tuple<int, int, int>(nx, ny, newLives));
+            queue.insert(new Node() { x = nx, y = ny, lives = newLives, distance = distance });
+          }
         }
       }
     }
@@ -127,7 +141,7 @@ namespace TCEscape
       List<Area> areas = new List<Area>();
 
       BuildAreas(areas, harmful, AreaType.HARMFUL);
-      BuildAreas(areas, harmful, AreaType.DEADLY);
+      BuildAreas(areas, deadly, AreaType.DEADLY);
 
       return areas;
     }
@@ -155,9 +169,9 @@ namespace TCEscape
       Area newArea = new Area();
       newArea.areaType = areaType;
       newArea.xmin = Math.Min(coords[0], coords[2]);
-      newArea.xmax = Math.Min(coords[0], coords[2]);
+      newArea.xmax = Math.Max(coords[0], coords[2]);
       newArea.ymin = Math.Min(coords[1], coords[3]);
-      newArea.ymax = Math.Min(coords[1], coords[3]);
+      newArea.ymax = Math.Max(coords[1], coords[3]);
 
       return newArea;
     }
@@ -190,6 +204,20 @@ namespace TCEscape
       {
         Node other = obj as Node;
         return (lives + distance) - (other.lives + other.distance);
+      }
+
+      public override bool Equals(object obj)
+      {
+        Node other = obj as Node;
+        return other.x == x && other.y == y;
+      }
+    }
+
+    private class NodeComparer : Comparer<Node>
+    {
+      public override int Compare(Node x, Node y)
+      {
+        return (x.lives + x.distance) - (y.lives + y.distance);
       }
     }
   }
