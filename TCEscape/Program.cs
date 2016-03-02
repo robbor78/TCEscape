@@ -18,23 +18,29 @@ namespace TCEscape
     {
       List<Area> areas = BuildAreas(harmful, deadly);
 
-      bool[][] visited = new bool[dim][];
-      for (int i = 0; i < dim; i++)
-      {
-        visited[i] = Enumerable.Repeat(false, dim).ToArray();
-      }
+      //bool[][] visited = new bool[dim][];
+      //for (int i = 0; i < dim; i++)
+      //{
+      //  visited[i] = Enumerable.Repeat(false, dim).ToArray();
+      //}
 
       int lives = int.MaxValue;
-      Queue<Tuple<int, int, int>> queue = new Queue<Tuple<int, int, int>>(); //x,y,step-count
-      queue.Enqueue(new Tuple<int, int, int>(0, 0, 0));
-      visited[0][0] = true;
+      //Queue<Tuple<int, int, int>> queue = new Queue<Tuple<int, int, int>>(); //x,y,step-count
+      //queue.Enqueue(new Tuple<int, int, int>(0, 0, 0));
 
-      while (queue.Count() > 0)
+      MinPQ<Node> queue = new MinPQ<Node>();
+      queue.insert(new Node() { distance = dim * 2, lives = 0, x = 0, y = 0 });
+
+      //visited[0][0] = true;
+
+      while (queue.size() > 0)
       {
-        Tuple<int, int, int> now = queue.Dequeue();
-        int x = now.Item1;
-        int y = now.Item2;
-        int nowLives = now.Item3;
+        //Tuple<int, int, int> now = queue.Dequeue();
+        Node now = queue.delMin();
+
+        int x = now.x;
+        int y = now.y;
+        int nowLives = now.lives;
 
         if (IsDestination(now))
         {
@@ -43,34 +49,37 @@ namespace TCEscape
         else
         {
 
-          //already visited ?
-          if (visited[x][y])
-          {
-            UpdateLives(ref lives, nowLives);
-          }
-          else
-          {
-            visited[x][y] = true;
+          ////already visited ?
+          //if (visited[x][y])
+          //{
+          //  UpdateLives(ref lives, nowLives);
+          //}
+          //else
+          //{
+          //  visited[x][y] = true;
 
-            Enqueue(queue, areas, nowLives, x - 1, y);
-            Enqueue(queue, areas, nowLives, x + 1, y);
-            Enqueue(queue, areas, nowLives, x, y - 1);
-            Enqueue(queue, areas, nowLives, x, y + 1);
+          Enqueue(queue, areas, nowLives, x - 1, y);
+          Enqueue(queue, areas, nowLives, x + 1, y);
+          Enqueue(queue, areas, nowLives, x, y - 1);
+          Enqueue(queue, areas, nowLives, x, y + 1);
 
-          }
+          //}
         }
       }
       return lives == int.MaxValue ? -1 : lives;
     }
 
-    private void Enqueue(Queue<Tuple<int, int, int>> queue, List<Area> areas, int nowLives, int nx, int ny)
+    //private void Enqueue(Queue<Tuple<int, int, int>> queue, List<Area> areas, int nowLives, int nx, int ny)
+    private void Enqueue(MinPQ<Node> queue, List<Area> areas, int nowLives, int nx, int ny)
     {
       if (nx >= 0 && ny < dim)
       {
         if (isAllowed(areas, nx, ny))
         {
           int newLives = nowLives + GetDamage(areas, nx, ny);
-          queue.Enqueue(new Tuple<int, int, int>(nx, ny, newLives));
+          int distance = dim-nx + dim-ny;
+          //queue.Enqueue(new Tuple<int, int, int>(nx, ny, newLives));
+          queue.insert(new Node() { x = nx, y = ny, lives = newLives, distance = distance });
         }
       }
     }
@@ -107,9 +116,10 @@ namespace TCEscape
       }
     }
 
-    private bool IsDestination(Tuple<int, int, int> pos)
+    private bool IsDestination(Node node)//Tuple<int, int, int> pos)
     {
-      return (pos.Item1 == dim - 1 && pos.Item2 == dim - 1);
+      //return (pos.Item1 == dim - 1 && pos.Item2 == dim - 1);
+      return (node.x == dim - 1 && node.y == dim - 1);
     }
 
     private List<Area> BuildAreas(string[] harmful, string[] deadly)
@@ -167,6 +177,20 @@ namespace TCEscape
     {
       DEADLY,
       HARMFUL
+    }
+
+    private class Node : IComparable
+    {
+      public int lives;
+      public int distance;
+      public int x;
+      public int y;
+
+      public int CompareTo(object obj)
+      {
+        Node other = obj as Node;
+        return (lives + distance) - (other.lives + other.distance);
+      }
     }
   }
 }

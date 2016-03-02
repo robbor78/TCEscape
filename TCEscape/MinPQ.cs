@@ -1,4 +1,28 @@
 ﻿/******************************************************************************
+ *  Copyright 2002-2015, Robert Sedgewick and Kevin Wayne.
+ *
+ *  This file is part of algs4.jar, which accompanies the textbook
+ *
+ *      Algorithms, 4th edition by Robert Sedgewick and Kevin Wayne,
+ *      Addison-Wesley Professional, 2011, ISBN 0-321-57351-X.
+ *      http://algs4.cs.princeton.edu
+ *
+ *
+ *  algs4.jar is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  algs4.jar is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with algs4.jar.  If not, see http://www.gnu.org/licenses.
+ ******************************************************************************/
+
+/******************************************************************************
  *  Compilation:  javac MinPQ.java
  *  Execution:    java MinPQ < input.txt
  *  Dependencies: StdIn.java StdOut.java
@@ -15,8 +39,6 @@
  *  (ala insertion sort).
  *
  ******************************************************************************/
-
-
 
 using System;
 using System.Collections;
@@ -101,9 +123,13 @@ public class MinPQ<Key> : IEnumerable<Key>
     N = keys.Length;
     pq = new Key[keys.Length + 1];
     for (int i = 0; i < N; i++)
+    {
       pq[i + 1] = keys[i];
+    }
     for (int k = N / 2; k >= 1; k--)
+    {
       sink(k);
+    }
     Debug.Assert(isMinHeap());
   }
 
@@ -136,7 +162,7 @@ public class MinPQ<Key> : IEnumerable<Key>
    */
   public Key min()
   {
-    if (isEmpty()) throw new Exception("Priority queue underflow");
+    if (isEmpty()) { throw new Exception("Priority queue underflow"); }
     return pq[1];
   }
 
@@ -160,7 +186,7 @@ public class MinPQ<Key> : IEnumerable<Key>
   public void insert(Key x)
   {
     // double size of array if necessary
-    if (N == pq.Length - 1) resize(2 * pq.Length);
+    if (N == pq.Length - 1) { resize(2 * pq.Length); }
 
     // add x, and percolate it up to maintain heap invariant
     pq[++N] = x;
@@ -176,12 +202,12 @@ public class MinPQ<Key> : IEnumerable<Key>
    */
   public Key delMin()
   {
-    if (isEmpty()) throw new Exception("Priority queue underflow");
+    if (isEmpty()) { throw new Exception("Priority queue underflow"); }
     exch(1, N);
     Key min = pq[N--];
     sink(1);
     pq[N + 1] = default(Key);         // avoid loitering and help with garbage collection
-    if ((N > 0) && (N == (pq.Length - 1) / 4)) resize(pq.Length / 2);
+    if ((N > 0) && (N == (pq.Length - 1) / 4)) { resize(pq.Length / 2); }
     Debug.Assert(isMinHeap());
     return min;
   }
@@ -206,7 +232,7 @@ public class MinPQ<Key> : IEnumerable<Key>
     {
       int j = 2 * k;
       if (j < N && greater(j, j + 1)) j++;
-      if (!greater(k, j)) break;
+      if (!greater(k, j)) { break; }
       exch(k, j);
       k = j;
     }
@@ -242,10 +268,10 @@ public class MinPQ<Key> : IEnumerable<Key>
   // is subtree of pq[1..N] rooted at k a min heap?
   private bool isMinHeap(int k)
   {
-    if (k > N) return true;
+    if (k > N) { return true; }
     int left = 2 * k, right = 2 * k + 1;
-    if (left <= N && greater(k, left)) return false;
-    if (right <= N && greater(k, right)) return false;
+    if (left <= N && greater(k, left)) { return false; }
+    if (right <= N && greater(k, right)) { return false; }
     return isMinHeap(left) && isMinHeap(right);
   }
 
@@ -279,75 +305,64 @@ public class MinPQ<Key> : IEnumerable<Key>
   {
     // create a new pq
     private MinPQ<Key> copy;
+    private MinPQ<Key> orig;
+
 
     public Key Current
     {
       get
       {
-        return copy.delMin();
+        return GetCurrent();
       }
     }
 
-    //object IEnumerator.Current
-    //{
-    //  get
-    //  {
-    //    throw new NotImplementedException();
-    //  }
-    //}
+    object IEnumerator.Current
+    {
+      get
+      {
+        return GetCurrent();
+      }
+    }
 
     // add all items to copy of heap
     // takes linear time since already in heap order so no keys move
     public HeapIterator(MinPQ<Key> queue)
     {
-      if (queue.comparator == null) copy = new MinPQ<Key>(queue.size());
-      else copy = new MinPQ<Key>(queue.size(), queue.comparator);
-      for (int i = 1; i <= queue.N; i++)
-        copy.insert(queue.pq[i]);
+      orig = queue;
+      Reset();
     }
-
-    public bool hasNext() { return !copy.isEmpty(); }
-
 
     public void Dispose()
     {
-      
+
     }
 
     public bool MoveNext()
     {
-      if (!hasNext()) throw new NoSuchElementException();
-      return copy.delMin();
+      return !copy.isEmpty();
     }
 
     public void Reset()
     {
-      throw new NotImplementedException();
+      if (orig.comparator == null)
+      {
+        copy = new MinPQ<Key>(orig.size());
+      }
+      else {
+        copy = new MinPQ<Key>(orig.size(), orig.comparator);
+      }
+      for (int i = 1; i <= orig.N; i++)
+      {
+        copy.insert(orig.pq[i]);
+      }
+    }
+
+    private Key GetCurrent()
+    {
+      if (copy.isEmpty()) { throw new Exception(); }
+      return copy.delMin();
     }
   }
 
 }
 
-/******************************************************************************
- *  Copyright 2002-2015, Robert Sedgewick and Kevin Wayne.
- *
- *  This file is part of algs4.jar, which accompanies the textbook
- *
- *      Algorithms, 4th edition by Robert Sedgewick and Kevin Wayne,
- *      Addison-Wesley Professional, 2011, ISBN 0-321-57351-X.
- *      http://algs4.cs.princeton.edu
- *
- *
- *  algs4.jar is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  algs4.jar is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with algs4.jar.  If not, see http://www.gnu.org/licenses.
- ******************************************************************************/
